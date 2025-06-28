@@ -1,0 +1,38 @@
+name: DevTime API CI
+
+on:
+    push:
+        branches: [ "main" ]
+    pull_request:
+        branches: [ "main" ]
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        services:
+            mongo:
+                image: mongo:5
+                ports:
+                    - "27017:27017"
+                options: >-
+                    --health-cmd "mongo --eval 'db.stats()'"
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 3
+        
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v3
+            
+            - name: Install dependencies
+              run: npm install
+            
+            - name: Run tests
+              run: npm test
+
+            - name: Build Docker image
+              run: docker build -t devtimeapi .
+            
+            - name: Lint check
+              run: npx eslint .
